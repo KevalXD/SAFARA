@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="nb-mark">S</div>
+      <span style="font-family:'Fraunces',serif;font-weight:700;font-size:1.2rem;color:var(--blue)">SAFARA</span>
+    </div>
+    <h2 class="auth-title">Welcome back</h2>
+    <p class="auth-sub">Sign in to your SAFARA account to report incidents and access personalized safety routes.</p>
+
+    <div class="alert alert-blue" id="login-error" style="display:none;margin-bottom:16px;font-size:.8rem">
+      ⚠️ Invalid email or password. Try: user@safara.in / user123
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" id="login-email" type="email" placeholder="you@email.com"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="••••••••"/>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In →</button>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <a href="signup.html" class="btn btn-ghost" style="justify-content:center;font-size:.78rem">Create Account</a>
+      <a href="ngo_signup.html" class="btn btn-outline" style="justify-content:center;font-size:.78rem">NGO / Register</a>
+    </div>
+
+    <div class="auth-footer" style="margin-top:16px;font-size:.72rem">
+      Demo: <strong>user@safara.in</strong> / user123 &nbsp;|&nbsp; <strong>admin@safara.in</strong> / admin123
+    </div>
+  </div>
+</div>
+<script src="js/utils.js"></script>
+<script>
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const user  = DB.findUser(email, pass);
+  if (!user) { document.getElementById('login-error').style.display='flex'; return; }
+  Auth.save(user);
+  if (user.role === 'admin') window.location.href = 'admin_dashboard.html';
+  else if (user.role === 'ngo') window.location.href = 'ngo_dashboard.html';
+  else window.location.href = 'index.html';
+}
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

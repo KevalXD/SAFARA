@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@safara.in",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "role": "admin",
+      "reputation": 10
+    },
+    {
+      "id": 2,
+      "name": "Demo User",
+      "email": "user@safara.in",
+      "password": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+      "role": "user",
+      "reputation": 3
+    },
+    {
+      "id": 3,
+      "name": "Safe City NGO",
+      "email": "ngo@safara.in",
+      "password": "060fe28178c35c127d8382fc7f8d9a30946251ec8b6d11793833f3d1c081c625",
+      "role": "ngo",
+      "status": "approved"
+    }
+  ],
+  "ngo_pending": [],
+  "incidents": [],
+  "next_id": 100
+}

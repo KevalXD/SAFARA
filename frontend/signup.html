@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign Up — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:500px">
+    <div class="auth-logo">
+      <div class="nb-mark">S</div>
+      <span style="font-family:'Fraunces',serif;font-weight:700;font-size:1.2rem;color:var(--blue)">SAFARA</span>
+    </div>
+    <h2 class="auth-title">Create Account</h2>
+    <p class="auth-sub">Join SAFARA and help build safer routes for your community.</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="s-name" type="text" placeholder="Rahul Sharma"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" id="s-phone" type="tel" placeholder="9876543210"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" id="s-email" type="email" placeholder="you@email.com"/>
+      <div class="form-error" id="err-email">Email already registered.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">City / Area</label>
+      <input class="form-input" id="s-city" type="text" placeholder="Bengaluru"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="s-pass" type="password" placeholder="••••••••"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" id="s-pass2" type="password" placeholder="••••••••"/>
+        <div class="form-error" id="err-pass">Passwords do not match.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doSignup()">Create Account →</button>
+    <div class="auth-footer"><a href="login.html">Already have an account? Sign in</a></div>
+    <div class="auth-footer" style="margin-top:6px"><a href="ngo_signup.html">Register as NGO / Authority</a></div>
+  </div>
+</div>
+<script src="js/utils.js"></script>
+<script>
+function doSignup() {
+  const name  = document.getElementById('s-name').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  const pass  = document.getElementById('s-pass').value;
+  const pass2 = document.getElementById('s-pass2').value;
+
+  document.getElementById('err-email').classList.remove('show');
+  document.getElementById('err-pass').classList.remove('show');
+
+  if (!name || !email || !pass) { alert('Please fill all required fields.'); return; }
+  if (pass !== pass2) { document.getElementById('err-pass').classList.add('show'); return; }
+  if (DB.emailExists(email)) { document.getElementById('err-email').classList.add('show'); return; }
+
+  const user = DB.addUser({
+    name, email, password: pass,
+    phone: document.getElementById('s-phone').value,
+    city: document.getElementById('s-city').value,
+    role: 'user', reputation: 1,
+    joined: new Date().toISOString().slice(0,10)
+  });
+  Auth.save(user);
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

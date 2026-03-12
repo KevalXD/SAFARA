@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NGO Dashboard — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+.dash-wrap { padding:28px; max-width:1100px; margin:0 auto; }
+.incident-row {
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:12px; padding:16px 18px; margin-bottom:10px;
+  display:flex; align-items:center; gap:16px; transition:all .2s;
+}
+.incident-row:hover { box-shadow:var(--shadow); }
+.ir-type { width:140px; flex-shrink:0; font-weight:700; font-size:.84rem; color:var(--blue); }
+.ir-loc  { flex:1; font-size:.82rem; color:var(--text); }
+.ir-cred { width:80px; text-align:center; }
+.ir-cred-val { font-weight:800; font-size:1rem; color:var(--blue); }
+.ir-cred-key { font-size:.6rem; color:var(--muted); text-transform:uppercase; }
+.ir-time { width:130px; font-size:.72rem; color:var(--muted); }
+.ir-actions { display:flex; gap:6px; }
+.btn-confirm { background:var(--green-light); color:var(--green); border:1.5px solid rgba(26,122,82,.25); padding:7px 12px; border-radius:7px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:.72rem; cursor:pointer; transition:all .2s; }
+.btn-confirm:hover { background:var(--green2); color:#fff; border-color:var(--green2); }
+.btn-reject  { background:var(--red-light); color:var(--red); border:1.5px solid rgba(220,38,38,.25); padding:7px 12px; border-radius:7px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:.72rem; cursor:pointer; transition:all .2s; }
+.btn-reject:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.btn-invest  { background:var(--orange-light); color:var(--orange); border:1.5px solid rgba(217,119,6,.25); padding:7px 12px; border-radius:7px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:.72rem; cursor:pointer; transition:all .2s; }
+.filter-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-btn { padding:7px 16px; border-radius:100px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:.75rem; cursor:pointer; transition:all .2s; }
+.filter-btn:hover, .filter-btn.on { background:var(--blue-light); color:var(--blue); border-color:var(--blue3); }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="dash-wrap">
+  <div class="pg-header fu">
+    <span class="pg-label">NGO Dashboard</span>
+    <h1 class="pg-title">Incident Verification</h1>
+    <p class="pg-sub">Review and verify community-submitted incidents. Only confirmed incidents affect route safety scores.</p>
+  </div>
+
+  <div class="stats-row fu d1" id="ngo-stats"></div>
+
+  <div class="filter-bar fu d2">
+    <button class="filter-btn on" onclick="filterIncidents('all',this)">All</button>
+    <button class="filter-btn" onclick="filterIncidents('pending',this)">Pending</button>
+    <button class="filter-btn" onclick="filterIncidents('flagged',this)">Flagged</button>
+    <button class="filter-btn" onclick="filterIncidents('confirmed',this)">Confirmed</button>
+    <button class="filter-btn" onclick="filterIncidents('rejected',this)">Rejected</button>
+  </div>
+
+  <div id="incidents-list" class="fu d3"></div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.require('ngo')) return;
+  renderStats();
+  renderIncidents('all');
+});
+
+function renderStats() {
+  const d = DB.get();
+  const all = d.incidents;
+  document.getElementById('ngo-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${all.length}</div><div class="stat-key">Total Reports</div></div>
+    <div class="stat-card"><div class="stat-val orange">${all.filter(i=>i.status==='pending').length}</div><div class="stat-key">Pending Review</div></div>
+    <div class="stat-card"><div class="stat-val red">${all.filter(i=>i.status==='flagged').length}</div><div class="stat-key">Flagged</div></div>
+    <div class="stat-card"><div class="stat-val green">${all.filter(i=>i.status==='confirmed').length}</div><div class="stat-key">Confirmed</div></div>
+  `;
+}
+
+let currentFilter = 'all';
+function filterIncidents(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderIncidents(f);
+}
+
+function renderIncidents(filter) {
+  const d = DB.get();
+  let list = filter === 'all' ? d.incidents : d.incidents.filter(i => i.status === filter);
+  const container = document.getElementById('incidents-list');
+  if (!list.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:.85rem">No incidents found for this filter.</div>'; return; }
+
+  container.innerHTML = list.map(inc => {
+    const statusCls = inc.status==='confirmed'?'badge-green':inc.status==='rejected'?'badge-red':inc.status==='flagged'?'badge-orange':'badge-blue';
+    const t = new Date(inc.timestamp);
+    const timeStr = isNaN(t) ? inc.timestamp : t.toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    return `
+      <div class="incident-row" id="row-${inc.id}">
+        <div class="ir-type">
+          <div>${inc.type}</div>
+          <span class="badge ${statusCls}" style="margin-top:4px">${inc.status}</span>
+        </div>
+        <div class="ir-loc">
+          <div style="font-weight:600">${inc.location}</div>
+          <div style="font-size:.74rem;color:var(--muted);margin-top:2px">${inc.desc || 'No description'}</div>
+        </div>
+        <div class="ir-cred">
+          <div class="ir-cred-val">${inc.credibility || inc.reputation || 1}</div>
+          <div class="ir-cred-key">Credibility</div>
+        </div>
+        <div class="ir-time">${timeStr}</div>
+        <div class="ir-actions">
+          <button class="btn-confirm" onclick="updateStatus(${inc.id},'confirmed')">✓ Confirm</button>
+          <button class="btn-invest"  onclick="updateStatus(${inc.id},'flagged')">🔍 Flag</button>
+          <button class="btn-reject"  onclick="updateStatus(${inc.id},'rejected')">✕ Reject</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStatus(id, status) {
+  DB.updateIncident(id, { status });
+  if (status === 'rejected') {
+    const d = DB.get();
+    const inc = d.incidents.find(i => i.id == id);
+    if (inc && inc.userId) DB.updateReputation(inc.userId, -1);
+  }
+  showToast(status==='confirmed'?'✅':status==='rejected'?'❌':'🔍', status==='confirmed'?'g':status==='rejected'?'r':'o',
+    'Incident ' + status, 'Route safety scores updated.');
+  renderStats();
+  renderIncidents(currentFilter);
+}
+</script>
+</body>
+</html>

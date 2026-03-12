@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Navigate — SAFARA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+.nav-shell { display:flex; height:calc(100vh - 60px); overflow:hidden; }
+.nav-panel {
+  width:300px; flex-shrink:0; background:var(--white);
+  border-right:1px solid var(--border);
+  overflow-y:auto; padding:22px 18px;
+  display:flex; flex-direction:column; gap:16px;
+}
+.nav-panel h2 { font-family:'Fraunces',serif; font-weight:700; font-size:1.25rem; color:var(--blue); }
+.nav-panel p  { font-size:.78rem; color:var(--muted); line-height:1.6; }
+#nav-map { flex:1; position:relative; }
+.nav-loader { position:absolute; inset:0; background:rgba(242,245,249,.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; z-index:999; }
+.nav-loader.show { display:flex; }
+.result-card {
+  background:var(--green-light); border:1.5px solid rgba(26,122,82,.2);
+  border-radius:12px; padding:16px; display:none; animation:pop .4s ease both;
+}
+.rc-msg { font-size:.7rem; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; }
+.rc-msg::before { content:'✓  '; }
+.rc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+.rc-box { background:var(--white); border-radius:8px; padding:10px; text-align:center; }
+.rc-v { font-weight:800; font-size:1rem; color:var(--blue); }
+.rc-k { font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+@media(max-width:768px) {
+  .nav-shell { flex-direction:column; }
+  .nav-panel { width:100%; border-right:none; border-bottom:1px solid var(--border); }
+  #nav-map { height:350px; }
+}
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+
+<div class="nav-shell">
+  <div class="nav-panel">
+    <div>
+      <h2>Find Safest Route</h2>
+      <p style="margin-top:6px">Enter your start and destination. SAFARA calculates the safest available path — not just the fastest.</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📍 Start Location</label>
+      <input class="form-input" id="np-start" type="text" placeholder="e.g. Koramangala"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">🎯 Destination</label>
+      <input class="form-input" id="np-dest" type="text" placeholder="e.g. MG Road"/>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="calcRoute()">Find Safest Route →</button>
+
+    <div class="result-card" id="result-card">
+      <div class="rc-msg">Safer route selected for your journey</div>
+      <div class="rc-grid">
+        <div class="rc-box"><div class="rc-v" id="rc-dist">—</div><div class="rc-k">Distance</div></div>
+        <div class="rc-box"><div class="rc-v" id="rc-time">—</div><div class="rc-k">Est. Time</div></div>
+      </div>
+      <div class="score-wrap">
+        <div class="score-label">Safety Score</div>
+        <div class="score-bar-bg"><div class="score-bar-fill" id="rc-bar"></div></div>
+        <div class="score-num" id="rc-snum">— / 10</div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="alert alert-green" style="font-size:.75rem;padding:10px 12px">
+          ✔ SAFARA has selected the safest available route for your journey. Unsafe zones have been avoided.
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--border)">
+      <a href="report.html" class="btn btn-ghost btn-full btn-sm">📋 Report an Incident</a>
+    </div>
+  </div>
+
+  <div style="position:relative;flex:1">
+    <div id="nav-map" style="width:100%;height:100%"></div>
+    <div class="nav-loader" id="nav-loader">
+      <div class="spinner"></div>
+      <div class="loader-txt">Calculating safest route…</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+let nMap = null, nLayer = null;
+
+window.addEventListener('load', () => {
+  nMap = makeMap('nav-map', null, 13);
+  getUserLocation(nMap, 'np-start');
+  setTimeout(() => nMap.invalidateSize(), 200);
+});
+
+async function calcRoute() {
+  const start = document.getElementById('np-start').value.trim();
+  const dest  = document.getElementById('np-dest').value.trim();
+  if (!start || !dest) { showToast('⚠️','o','Missing fields','Enter both start and destination.'); return; }
+
+  const loader = document.getElementById('nav-loader');
+  loader.classList.add('show');
+
+  try {
+    let sc = start.toLowerCase().includes('my location')
+      ? await new Promise(res => navigator.geolocation
+          ? navigator.geolocation.getCurrentPosition(p => res([p.coords.latitude, p.coords.longitude]), () => res(BENGALURU))
+          : res(BENGALURU))
+      : await geocode(start) || BENGALURU;
+
+    const dc = await geocode(dest);
+    if (!dc) { loader.classList.remove('show'); showToast('⚠️','o','Not found','Try a more specific location.'); return; }
+
+    if (nLayer) nMap.removeLayer(nLayer);
+    const result = await drawOSRMRoute(nMap, sc, dc);
+    loader.classList.remove('show');
+
+    if (result) {
+      const score = Safety.routeScore();
+      nLayer = result.layer;
+      document.getElementById('rc-dist').textContent = result.distKm + ' km';
+      document.getElementById('rc-time').textContent = result.timeMin + ' min';
+      document.getElementById('rc-bar').style.width = (score * 10) + '%';
+      document.getElementById('rc-snum').textContent = score + ' / 10';
+      document.getElementById('result-card').style.display = 'block';
+      showToast('✅','g','Safer route selected', `${result.distKm} km · ${result.timeMin} min · Safety ${score}/10`);
+    }
+  } catch(e) {
+    loader.classList.remove('show');
+    showToast('⚠️','o','Error','Check your internet connection.');
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>About — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+.about-hero {
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  border-radius:20px; padding:40px; margin-bottom:24px;
+  color:#fff; position:relative; overflow:hidden;
+}
+.about-hero::before { content:''; position:absolute; right:-50px; top:-50px; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.05); }
+.about-hero::after  { content:''; position:absolute; right:60px; bottom:-70px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.04); }
+.ah-lbl  { font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:10px; font-weight:600; display:block; }
+.ah-ttl  { font-family:'Fraunces',serif; font-weight:800; font-size:1.9rem; line-height:1.1; margin-bottom:12px; position:relative; }
+.ah-sub  { font-size:.88rem; color:rgba(255,255,255,.8); line-height:1.75; max-width:500px; position:relative; }
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.ac { background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:22px; box-shadow:var(--shadow); transition:all .2s; }
+.ac:hover { transform:translateY(-3px); box-shadow:var(--shadow2); }
+.ac-ico  { font-size:1.6rem; margin-bottom:10px; }
+.ac-ttl  { font-weight:700; font-size:.9rem; color:var(--blue); margin-bottom:6px; }
+.ac-txt  { font-size:.78rem; color:var(--muted); line-height:1.7; }
+.how-card { background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:24px; box-shadow:var(--shadow); margin-bottom:24px; }
+.how-ttl  { font-weight:700; font-size:.92rem; color:var(--blue); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.how-step { display:flex; gap:14px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--s1); }
+.how-step:last-child { border-bottom:none; }
+.hn { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--blue2)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; flex-shrink:0; }
+.hs-t { font-weight:700; font-size:.84rem; color:var(--blue); margin-bottom:3px; }
+.hs-d { font-size:.77rem; color:var(--muted); line-height:1.6; }
+.sdg-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.sdg-c { background:var(--white); border:1.5px solid var(--border); border-radius:14px; padding:20px; display:flex; gap:14px; align-items:flex-start; box-shadow:var(--shadow); }
+.sn { font-family:'Fraunces',serif; font-weight:800; font-size:2.2rem; line-height:1; flex-shrink:0; }
+.sn5 { color:#d4381e; } .sn11 { color:#e89220; }
+.sg { font-weight:700; font-size:.84rem; color:var(--blue); margin-bottom:5px; }
+.st { font-size:.76rem; color:var(--muted); line-height:1.6; }
+@media(max-width:600px) { .about-grid,.sdg-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="page-wrap">
+  <div class="about-hero fu">
+    <span class="ah-lbl">About SAFARA</span>
+    <h1 class="ah-ttl">Safety-Aware Navigation<br>for Everyone.</h1>
+    <p class="ah-sub">SAFARA combines community incident reports, environmental signals, and intelligent routing to guide users through the safest paths — not just the fastest.</p>
+  </div>
+
+  <div class="about-grid fu d1">
+    <div class="ac"><div class="ac-ico">🛡</div><div class="ac-ttl">Safety First</div><p class="ac-txt">Unlike standard navigation, SAFARA prioritizes your safety over speed. Dangerous zones are processed internally — you only see calm, reassuring route guidance.</p></div>
+    <div class="ac"><div class="ac-ico">🤖</div><div class="ac-ttl">AI-Powered Routing</div><p class="ac-txt">NLP models classify incident reports by severity. The routing engine factors real-time safety scores to recommend the best path for every user.</p></div>
+    <div class="ac"><div class="ac-ico">👥</div><div class="ac-ttl">Community Driven</div><p class="ac-txt">Every report from every user improves safety for everyone. Verified incidents silently update routes — protecting the next commuter automatically.</p></div>
+    <div class="ac"><div class="ac-ico">🔒</div><div class="ac-ttl">Privacy by Design</div><p class="ac-txt">All reports are anonymous. No personal data stored. SAFARA only uses aggregated safety signals — never individual user data.</p></div>
+  </div>
+
+  <div class="how-card fu d2">
+    <div class="how-ttl">How SAFARA Works</div>
+    <div class="how-step"><div class="hn">1</div><div><div class="hs-t">User selects a route</div><p class="hs-d">Start and destination are submitted to the SAFARA routing engine.</p></div></div>
+    <div class="how-step"><div class="hn">2</div><div><div class="hs-t">Safety data analyzed</div><p class="hs-d">Community reports are processed internally through our multi-level verification system. Users never see danger zones.</p></div></div>
+    <div class="how-step"><div class="hn">3</div><div><div class="hs-t">Safest route recommended</div><p class="hs-d">Only the safest available route is shown with a calm safety score — no alarming warnings shown to users.</p></div></div>
+    <div class="how-step"><div class="hn">4</div><div><div class="hs-t">NGO verification layer</div><p class="hs-d">Reports are verified by trusted NGO partners before affecting routing. Reputation system prevents abuse.</p></div></div>
+    <div class="how-step"><div class="hn">5</div><div><div class="hs-t">Routes update silently</div><p class="hs-d">When incidents are confirmed, routes recalculate in the background. Users receive a calm reassuring update.</p></div></div>
+  </div>
+
+  <div class="sdg-row fu d3">
+    <div class="sdg-c"><div class="sn sn5">5</div><div><div class="sg">SDG 5 — Gender Equality</div><p class="st">SAFARA addresses gender-based harassment in public spaces, making cities safer and more equitable for women and gender-diverse individuals worldwide.</p></div></div>
+    <div class="sdg-c"><div class="sn sn11">11</div><div><div class="sg">SDG 11 — Sustainable Cities</div><p class="st">Safe mobility is foundational to sustainable cities. SAFARA builds data-driven safety infrastructure that makes urban transit trusted and accessible for all.</p></div></div>
+  </div>
+</div>
+<script src="js/utils.js"></script>
+<script src="js/navbar.js"></script>
+</body>
+</html>

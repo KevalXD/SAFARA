@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NGO Registration — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:520px">
+    <div class="auth-logo">
+      <div class="nb-mark">S</div>
+      <span style="font-family:'Fraunces',serif;font-weight:700;font-size:1.2rem;color:var(--blue)">SAFARA</span>
+    </div>
+    <h2 class="auth-title">NGO / Authority Registration</h2>
+    <p class="auth-sub">Register your organization to access the SAFARA incident verification dashboard. Your account will be reviewed by our admin team before approval.</p>
+
+    <div class="alert alert-orange" style="margin-bottom:20px;font-size:.78rem">
+      ⏳ NGO accounts require admin approval before accessing the dashboard.
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Organization Name</label>
+      <input class="form-input" id="n-org" type="text" placeholder="Safe City Foundation"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Official Email</label>
+        <input class="form-input" id="n-email" type="email" placeholder="org@ngo.in"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" id="n-phone" type="tel" placeholder="9876543210"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">City / Area</label>
+        <input class="form-input" id="n-city" type="text" placeholder="Bengaluru"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Registration / License ID</label>
+        <input class="form-input" id="n-regid" type="text" placeholder="NGO-KA-2024-001"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="n-pass" type="password" placeholder="••••••••"/>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doNGOSignup()">Submit for Review →</button>
+    <div class="auth-footer" style="margin-top:14px"><a href="login.html">Already registered? Sign in</a></div>
+  </div>
+</div>
+<script src="js/utils.js"></script>
+<script>
+function doNGOSignup() {
+  const org   = document.getElementById('n-org').value.trim();
+  const email = document.getElementById('n-email').value.trim();
+  const pass  = document.getElementById('n-pass').value;
+  const regId = document.getElementById('n-regid').value.trim();
+  if (!org || !email || !pass || !regId) { alert('Please fill all required fields.'); return; }
+  DB.addNGO({
+    org, email, password: pass,
+    phone: document.getElementById('n-phone').value,
+    city: document.getElementById('n-city').value,
+    regId, role: 'ngo', status: 'pending',
+    joined: new Date().toISOString().slice(0,10)
+  });
+  alert('✅ Registration submitted! An admin will review your application.');
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>

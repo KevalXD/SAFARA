@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard — SAFARA</title>
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+.dash-wrap { padding:28px; max-width:1100px; margin:0 auto; }
+.section-ttl { font-family:'Fraunces',serif; font-weight:700; font-size:1.1rem; color:var(--blue); margin-bottom:14px; margin-top:28px; display:flex; align-items:center; gap:8px; }
+.ngo-card {
+  background:var(--white); border:1.5px solid var(--border);
+  border-radius:12px; padding:18px 20px; margin-bottom:10px;
+  display:flex; align-items:center; gap:16px; transition:all .2s;
+}
+.ngo-card:hover { box-shadow:var(--shadow); }
+.nc-info { flex:1; }
+.nc-org  { font-weight:700; font-size:.9rem; color:var(--blue); }
+.nc-meta { font-size:.75rem; color:var(--muted); margin-top:3px; }
+.nc-actions { display:flex; gap:8px; }
+.users-table-wrap { background:var(--white); border:1.5px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:var(--shadow); }
+</style>
+</head>
+<body>
+<nav class="navbar" id="navbar"></nav>
+<div class="dash-wrap">
+  <div class="pg-header fu">
+    <span class="pg-label">Admin Panel</span>
+    <h1 class="pg-title">System Dashboard</h1>
+    <p class="pg-sub">Monitor the SAFARA platform, approve NGO registrations, and oversee system health.</p>
+  </div>
+
+  <div class="stats-row fu d1" id="admin-stats"></div>
+
+  <!-- NGO APPROVALS -->
+  <div class="section-ttl fu d2">🏢 Pending NGO Approvals <span class="badge badge-orange" id="pending-count">0</span></div>
+  <div id="ngo-pending-list" class="fu d3"></div>
+
+  <!-- ALL USERS -->
+  <div class="section-ttl fu d4">👥 Registered Users</div>
+  <div class="users-table-wrap fu d5">
+    <table id="users-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Reputation</th><th>Joined</th></tr></thead>
+      <tbody id="users-body"></tbody>
+    </table>
+  </div>
+
+  <!-- INCIDENTS OVERVIEW -->
+  <div class="section-ttl" style="margin-top:28px">📊 All Incidents</div>
+  <div class="users-table-wrap">
+    <table>
+      <thead><tr><th>Type</th><th>Location</th><th>Credibility</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody id="inc-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/navbar.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.require('admin')) return;
+  render();
+});
+
+function render() {
+  const d = DB.get();
+
+  // Stats
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${d.users.length}</div><div class="stat-key">Total Users</div></div>
+    <div class="stat-card"><div class="stat-val orange">${d.ngoPending.filter(n=>n.status==='pending').length}</div><div class="stat-key">Pending NGOs</div></div>
+    <div class="stat-card"><div class="stat-val">${d.incidents.length}</div><div class="stat-key">Total Incidents</div></div>
+    <div class="stat-card"><div class="stat-val green">${d.incidents.filter(i=>i.status==='confirmed').length}</div><div class="stat-key">Confirmed</div></div>
+  `;
+  document.getElementById('pending-count').textContent = d.ngoPending.filter(n=>n.status==='pending').length;
+
+  // NGO Pending
+  const pending = d.ngoPending.filter(n => n.status === 'pending');
+  const ngoList = document.getElementById('ngo-pending-list');
+  if (!pending.length) {
+    ngoList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:.82rem;background:var(--white);border-radius:12px;border:1.5px solid var(--border)">No pending NGO applications.</div>';
+  } else {
+    ngoList.innerHTML = pending.map(n => `
+      <div class="ngo-card">
+        <div class="nc-info">
+          <div class="nc-org">${n.org}</div>
+          <div class="nc-meta">${n.email} · ${n.city} · ID: ${n.regId} · Applied: ${n.joined}</div>
+        </div>
+        <span class="badge badge-orange">Pending</span>
+        <div class="nc-actions">
+          <button class="btn btn-green btn-sm" onclick="approveNGO(${n.id})">✓ Approve</button>
+          <button class="btn btn-ghost btn-sm" onclick="rejectNGO(${n.id})">✕ Reject</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Users table
+  document.getElementById('users-body').innerHTML = d.users.map(u => `
+    <tr>
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-red':u.role==='ngo'?'badge-orange':'badge-blue'}">${u.role}</span></td>
+      <td>${u.reputation || 1}/10</td>
+      <td>${u.joined || '—'}</td>
+    </tr>
+  `).join('');
+
+  // Incidents table
+  document.getElementById('inc-body').innerHTML = d.incidents.map(i => {
+    const cls = i.status==='confirmed'?'badge-green':i.status==='rejected'?'badge-red':i.status==='flagged'?'badge-orange':'badge-blue';
+    return `<tr><td>${i.type}</td><td>${i.location}</td><td>${i.credibility||1}</td><td><span class="badge ${cls}">${i.status}</span></td><td style="font-size:.75rem">${i.timestamp||'—'}</td></tr>`;
+  }).join('');
+}
+
+function approveNGO(id) {
+  DB.approveNGO(id);
+  showToast('✅','g','NGO Approved','Organization now has dashboard access.');
+  render();
+}
+function rejectNGO(id) {
+  DB.rejectNGO(id);
+  showToast('❌','r','NGO Rejected','Application has been declined.');
+  render();
+}
+</script>
+</body>
+</html>
